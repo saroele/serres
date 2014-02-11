@@ -32,7 +32,7 @@ struct {
     byte pump   :1; // 0 or 1, desired pump status
 } request;
 
-struct {
+typedef struct {
     byte humi   :7;  // humidity: 0..100
     int temp    :10; // temperature: -500..+500 (tenths)
     int dew     :10; // dewpoint temperature
@@ -56,21 +56,45 @@ void loop () {
     
     delay(1000); 
     
-    if (rf12_recvDone() && rf12_crc == 0) {
+    if (rf12_recvDone() && rf12_crc == 0 && rf12_len == sizeof (answer)) {
+      // got a good packet, treat its contents
         activityLed(1);
-        Serial.print("Receiving");
+        Serial.print("Receiving:\r\n");
         for (byte i = 0; i < rf12_len; ++i)
-            Serial.print(rf12_data[i]);
+            Serial.print(rf12_data[i]); // not sure if this will work...
         Serial.println();
         delay(100); // otherwise led blinking isn't visible
+        // Data from RFM12B returns in rf12_data
+        
+        const answer* p = (const answer*) rf12_data;
+        //Serial.print("Node: ");
+        //Serial.print((word) p->node);
+        float t,h,d;
+        
+        t = (p->temp-0.5)/10;
+        Serial.print("Temperatuur = ");
+        Serial.print(t);
+        Serial.print("\n\r");
+        h = p->humi - 0.5;
+        Serial.print("Relatieve vochtigheid = ");
+        Serial.print(h);
+        Serial.print("\n\r");
+        d = (p->dew - 0.5)/10;
+        Serial.print("Dauwpunt = ");
+        Serial.print(d);
+        Serial.print("\n\r");
+        Serial.print("Boiler = ");
+        Serial.print(p->boiler);
+        Serial.print("Pump = ");
+        Serial.print(p->pump);
+        
         activityLed(0);
         }
     
     if (rf12_canSend()) {
         activityLed(1);
         
-        request.boiler = 1;
-        request.pump = 1;
+        request.boiler = 1; // later, get these from my python program
         
         byte header = 0; // no acknowledgement
         header |= RF12_HDR_DST | ids_target[i];  // bitwise operation: add 1 in second byte position to specify that a destination is specified, and add the destination.
@@ -88,21 +112,7 @@ void loop () {
         }
     }   
 }
-//     if (rf12_recvDone() && rf12_crc == 0) {
-//        receiveLed(1);
-//        Serial.print("OK ");
-//        for (byte i = 0; i < rf12_len; ++i)
-//            Serial.print(rf12_data[i]);
-//        Serial.println();
-//        delay(100); // otherwise led blinking isn't visible
-//        receiveLed(0);
-// }
-    
-    
- 
-  
-  
-  
+
   
   
   
