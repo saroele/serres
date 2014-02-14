@@ -14,7 +14,7 @@
                           // to communicate with each other
 #define RF12_NODEID_GATEWAY  31      // Each node within a group must have a unique ID, this is the scketch for the jeelink
  
-MilliTimer sendTimer;
+MilliTimer timeout;
 
 #define LED_PIN   9 // activity LED, comment out to disable
 static void activityLed (byte on) {
@@ -54,51 +54,55 @@ void loop () {
         
   for (int i = 0; i < sizeof(ids_target); i++) {      
     
-    delay(1000); 
+    timeout.set(1000); // wait 1 second for answer
+    while (!timeout.poll())
     
-    if (rf12_recvDone() && rf12_crc == 0 && rf12_len == sizeof (Answer)) {
-      // got a good packet, treat its contents
-        activityLed(1);
-        int sender_id = (RF12_HDR_MASK & rf12_hdr);
-        Serial.print("Receiving from node ");
-        Serial.print(sender_id);
-        Serial.print("\r\n");
-        for (byte i = 0; i < rf12_len; ++i)
-            Serial.print(rf12_data[i]); // not sure if this will work...
-        Serial.println();
-        delay(100); // otherwise led blinking isn't visible
-        // Data from RFM12B returns in rf12_data
-        
-        const Answer* answer = (const Answer*) rf12_data;
-        //Serial.print("Node: ");
-        //Serial.print((word) p->node);
-        float t,h,d;
-        
-        t = (answer->temp-0.5)/10;
-        Serial.print("Temperatuur = ");
-        Serial.print(t);
-        Serial.print("\n\r");
-        h = answer->humi - 0.5;
-        Serial.print("Relatieve vochtigheid = ");
-        Serial.print(h);
-        Serial.print("\n\r");
-        d = (answer->dew - 0.5)/10;
-        Serial.print("Dauwpunt = ");
-        Serial.print(d);
-        Serial.print("\n\r");
-        Serial.print("Boiler = ");
-        Serial.print(answer->boiler);
-        Serial.print("Pump = ");
-        Serial.print(answer->pump);
-        
-        activityLed(0);
-        }
+        if (rf12_recvDone() && rf12_crc == 0 && rf12_len == sizeof (Answer)) {
+            // got a good packet, treat its contents
+            
+            // blink led 3 times briefly for receiving from node 
+            for (int i = 0; i < 3; i++) { 
+              activityLed(true);
+              delay(40);
+              activityLed(false);
+              delay(40);
+            }
+            
+            int sender_id = (RF12_HDR_MASK & rf12_hdr);
+            Serial.print("Receiving from node ");
+            Serial.print(sender_id);
+            Serial.println();
+
+            // Data from RFM12B returns in rf12_data
+            const Answer* answer = (const Answer*) rf12_data;
+            //Serial.print("Node: ");
+            //Serial.print((word) p->node);
+            float t,h,d;
+            
+            t = (answer->temp-0.5)/10;
+            Serial.print("Temperatuur = ");
+            Serial.print(t);
+            Serial.print("\n\r");
+            h = answer->humi - 0.5;
+            Serial.print("Relatieve vochtigheid = ");
+            Serial.print(h);
+            Serial.print("\n\r");
+            d = (answer->dew - 0.5)/10;
+            Serial.print("Dauwpunt = ");
+            Serial.print(d);
+            Serial.print("\n\r");
+            Serial.print("Boiler = ");
+            Serial.println(answer->boiler);
+            Serial.print("Pump = ");
+            Serial.println(answer->pump);
+            
+            }
     
     if (rf12_canSend()) {
         activityLed(1);
         
         Request request;
-        request.boiler = 1; // later, get these from my python program
+        request.boiler = 0; // later, get these from my python program
         request.pump = 1;
         
         byte header = 0; // no acknowledgement
