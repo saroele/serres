@@ -25,7 +25,7 @@ static void activityLed (byte on) {
 }
 
 byte needToSend;
-byte ids_target[2] = {3,16}; // Array with ids of the individual nodes.
+byte ids_target[3] = {3,16,17}; // Array with ids of the individual nodes.
 
 typedef struct {
     byte boiler :1; // 0 or 1, desired boiler status
@@ -33,7 +33,7 @@ typedef struct {
 } Request;
 
 typedef struct {
-    byte humi   :7;  // humidity: 0..100
+    int humi    :7;  // humidity: 0..100
     int temp    :10; // temperature: -500..+500 (tenths)
     int dew     :10; // dewpoint temperature
     byte boiler :1; // 0 or 1, boiler status
@@ -117,7 +117,7 @@ void loop () {
         rf12_sendStart(header, &request, sizeof request);
         
         delay(100); // otherwise led blinking isn't visible
-        activityLed(0);
+        activityLed(0);    
         }
     }   
 }

@@ -3,13 +3,12 @@
 // 2009-02-16 <jc@wippler.nl> http://opensource.org/licenses/mit-license.php
 
 #include <JeeLib.h>
-#include <PortsSHT11.h>
 
 #define RF12_GROUPID 100    // all nodes must be a member of the same group
-#define RF12_NODEID  3         // Each node within a group must have a unique ID
+#define RF12_NODEID  16         // Each node within a group must have a unique ID
 
-SHT11 sht11 (1);
-const byte LED = 9;
+DHTxx dht (4); // connected to DIO1, = arduino pin 4 on port 1 of jeenode
+const byte LED = 9; // this is the on-board led
 
 // turn the on-board LED on or off
 static void led (bool on) {
@@ -17,13 +16,13 @@ static void led (bool on) {
   digitalWrite(LED, on ? 0 : 1); // inverted logic
 }
 
-const byte PORTPUMP = 6;
+const byte PORTPUMP = 6; // LED on port 3, arduino pin 6
 static void relay_pump(bool on) {
   pinMode(PORTPUMP, OUTPUT);
   digitalWrite(PORTPUMP, on ? 1 : 0);
 }
 
-const byte PORTBOILER = 5;
+const byte PORTBOILER = 5; // LED on port 2, arduino pin 5
 static void relay_boiler(bool on) {
   pinMode(PORTBOILER, OUTPUT);
   digitalWrite(PORTBOILER, on ? 1 : 0);
@@ -35,7 +34,7 @@ typedef struct {
 } Request;
 
 typedef struct {
-    byte humi   :7;  // humidity: 0..100
+    int humi    :7;  // humidity: 0..100
     int temp    :10; // temperature: -500..+500 (tenths)
     int dew     :10; // dewpoint temperature
     byte boiler :1; // 0 or 1, boiler status
@@ -49,11 +48,7 @@ void setup() {
     Serial.print("\nNode with id ");
     Serial.print(RF12_NODEID);
     
-    // omit this call to avoid linking in the CRC calculation code
-    sht11.enableCRC();
-    
     // setup the wireless transmission
-    // this is node 1 in net group 100 on the 868 MHz band
     rf12_initialize(RF12_NODEID, RF12_868MHZ, RF12_GROUPID);
 }
 
@@ -95,40 +90,30 @@ void loop() {
         // omit following code to avoid linking in floating point code
         Answer answer;
         
-        Serial.print("\nSHT ");
+        Serial.print("\nDHT ");
     
-        uint8_t error = sht11.measure(SHT11::HUMI); 
-        Serial.print("sht11.meas[SHT11::HUMI]: ");
-        Serial.print(sht11.meas[SHT11::HUMI]);
-        Serial.print("\r\n");
+        int t, h;
+        if (dht.reading(t, h, true)) {  // This line will do a measurement, and get t and h
+          Serial.print("Temperature = ");
+          Serial.println(t);
+          Serial.print("Relative humidity = ");
+          Serial.println(h);
+          Serial.println();
+        }
+
         
-        error |= sht11.measure(SHT11::TEMP);
-        Serial.print("sht11.meas[SHT11::TEMP]: ");
-        Serial.print(sht11.meas[SHT11::TEMP]);
-        Serial.print("\r\n");
-        
-        Serial.print("error, DEC: " );
-        Serial.print(error, DEC);
-        Serial.print("\r\n");
-        
-        float h, t;
-        sht11.calculate(h, t);
-        answer.humi = h + 0.5;
-        answer.temp = 10 * t + 0.5;
-        Serial.print("Relative humidiy:  ");
-        Serial.print(h);
-        Serial.print(" Temperature: ");
-        Serial.print(t);
+        answer.humi = int(h / 10);
+        answer.temp = t;
+        Serial.print("answer.humi = ");
+        Serial.println(answer.humi);
+        Serial.print("answer.temp = ");
+        Serial.println(answer.temp);
       
-        // omit following code to avoid linking in the log() math code
-        float d = sht11.dewpoint(h, t);
-        answer.dew = 10 * d + 0.5;
+        answer.dew = 0;
         answer.boiler = 0;
         answer.pump = 1;
         
-        Serial.print(" Dewpoint: ");
-        Serial.print(d);
-  
+ 
         // actual packet send: broadcast to all
         rf12_sendStart(0, &answer, sizeof answer);
         
@@ -142,19 +127,5 @@ void loop() {
     }
 }
     
-    
-//    Serial.print("\nSHT ");
-//
-//    uint8_t error = sht11.measure(SHT11::HUMI); 
-//    Serial.print("sht11.meas[SHT11::HUMI]: ");
-//    Serial.print(sht11.meas[SHT11::HUMI]);
-//    Serial.print("\n");
-//    
-//    error |= sht11.measure(SHT11::TEMP);
-//    Serial.print("sht11.meas[SHT11::TEMP]: ");
-//    Serial.print(sht11.meas[SHT11::TEMP]);
-//    Serial.print("\n");
-//    
-//    Serial.print("error, DEC: " );
-//    Serial.print(error, DEC);
+
 
