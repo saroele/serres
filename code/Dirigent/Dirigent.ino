@@ -25,7 +25,7 @@ static void activityLed (byte on) {
 }
 
 byte needToSend;
-byte ids_target[3] = {3,16,17}; // Array with ids of the individual nodes.
+byte ids_target[2] = {3,16}; // Array with ids of the individual nodes.
 
 typedef struct {
     byte boiler :1; // 0 or 1, desired boiler status
@@ -53,6 +53,29 @@ void loop () {
   delay(5000);
         
   for (int i = 0; i < sizeof(ids_target); i++) {      
+    
+    if (rf12_canSend()) {
+        activityLed(1);
+        
+        Request request;
+        request.boiler = 0; // later, get these from my python program
+        request.pump = 1;
+        
+        byte header = 0; // no acknowledgement
+        header |= RF12_HDR_DST | ids_target[i];  // bitwise operation: add 1 in second byte position to specify that a destination is specified, and add the destination.
+        Serial.print("RF12_HDR_DST = ");
+        Serial.print(RF12_HDR_DST);
+        Serial.print("\r\n");
+        Serial.print("Header = ");
+        Serial.print(header);
+        Serial.print("\r\n");
+        
+        rf12_sendStart(header, &request, sizeof request);
+        
+        delay(100); // otherwise led blinking isn't visible
+        activityLed(0);    
+    }
+    
     
     timeout.set(1000); // wait 1 second for answer
     while (!timeout.poll())
@@ -98,28 +121,7 @@ void loop () {
             
             }
     
-    if (rf12_canSend()) {
-        activityLed(1);
-        
-        Request request;
-        request.boiler = 0; // later, get these from my python program
-        request.pump = 1;
-        
-        byte header = 0; // no acknowledgement
-        header |= RF12_HDR_DST | ids_target[i];  // bitwise operation: add 1 in second byte position to specify that a destination is specified, and add the destination.
-        Serial.print("RF12_HDR_DST = ");
-        Serial.print(RF12_HDR_DST);
-        Serial.print("\r\n");
-        Serial.print("Header = ");
-        Serial.print(header);
-        Serial.print("\r\n");
-        
-        rf12_sendStart(header, &request, sizeof request);
-        
-        delay(100); // otherwise led blinking isn't visible
-        activityLed(0);    
-        }
-    }   
+       }   
 }
 
   

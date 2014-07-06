@@ -5,7 +5,7 @@
 #include <JeeLib.h>
 
 #define RF12_GROUPID 100    // all nodes must be a member of the same group
-#define RF12_NODEID  16         // Each node within a group must have a unique ID
+#define RF12_NODEID 15         // Nummer van de serre = unique node ID
 
 DHTxx dht (4); // connected to DIO1, = arduino pin 4 on port 1 of jeenode
 const byte LED = 9; // this is the on-board led
