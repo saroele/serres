@@ -25,7 +25,7 @@ static void activityLed (byte on) {
 }
 
 byte needToSend;
-byte ids_target[2] = {3,16}; // Array with ids of the individual nodes.
+byte ids_target[7] = {3,6,7,8,9,12,15}; // Array with ids of the individual nodes.
 
 typedef struct {
     byte boiler :1; // 0 or 1, desired boiler status
