@@ -28,12 +28,13 @@ def parse_answer(s):
 
 
 import serial
-ser = serial.Serial('/dev/ttyUSB0', 57600, timeout=2)
-#while True:
-for _ in range(10):
+
+ser = serial.Serial('/dev/ttyUSB0', 57600)
+while True:
     # First, send a byte to get things running
     ser.write('b')    
     # now, get node ID, temp and rel hum
-    answer = ser.readall()
+    answer = ser.readline()
+    print answer
     print parse_answer(answer)
     
