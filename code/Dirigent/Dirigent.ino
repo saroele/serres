@@ -63,12 +63,12 @@ void loop () {
         
         byte header = 0; // no acknowledgement
         header |= RF12_HDR_DST | ids_target[i];  // bitwise operation: add 1 in second byte position to specify that a destination is specified, and add the destination.
-        Serial.print("RF12_HDR_DST = ");
-        Serial.print(RF12_HDR_DST);
-        Serial.print("\r\n");
-        Serial.print("Header = ");
-        Serial.print(header);
-        Serial.print("\r\n");
+        //Serial.print("RF12_HDR_DST = ");
+        //Serial.print(RF12_HDR_DST);
+        //Serial.print("\r\n");
+        //Serial.print("Header = ");
+        //Serial.print(header);
+        //Serial.print("\r\n");
         
         rf12_sendStart(header, &request, sizeof request);
         
@@ -92,31 +92,25 @@ void loop () {
             }
             
             int sender_id = (RF12_HDR_MASK & rf12_hdr);
-            Serial.print("Receiving from node ");
+            Serial.print("N");
+            if (sender_id < 10) {
+              Serial.print(0); }
             Serial.print(sender_id);
-            Serial.println();
 
             // Data from RFM12B returns in rf12_data
             const Answer* answer = (const Answer*) rf12_data;
-            //Serial.print("Node: ");
-            //Serial.print((word) p->node);
             float t,h,d;
             
             t = (answer->temp-0.5)/10;
-            Serial.print("Temperatuur = ");
+            Serial.print(" T=");
             Serial.print(t);
-            Serial.print("\n\r");
             h = answer->humi - 0.5;
-            Serial.print("Relatieve vochtigheid = ");
+            Serial.print(" V=");
             Serial.print(h);
-            Serial.print("\n\r");
             d = (answer->dew - 0.5)/10;
-            Serial.print("Dauwpunt = ");
-            Serial.print(d);
-            Serial.print("\n\r");
-            Serial.print("Boiler = ");
-            Serial.println(answer->boiler);
-            Serial.print("Pump = ");
+            Serial.print(" Boiler=");
+            Serial.print(answer->boiler);
+            Serial.print(" Pump=");
             Serial.println(answer->pump);
             
             }
