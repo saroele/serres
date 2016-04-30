@@ -58,7 +58,7 @@ if __name__ == '__main__':
         d = get_single_reading()
         # compute control
         print(u"Current temperature: {}°C".format(d['T']))
-        running = control(config['tmin'], config['tmax'], d['T'], running)
+        running = control(config['tmin'], config['tmax'], float(d['T']), running)
         # send control
         send_control(running)
 

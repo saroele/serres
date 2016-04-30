@@ -1,6 +1,10 @@
 from flask import Flask
 app = Flask(__name__)
 
+import sys
+sys.path.insert('..')
+
+
 @app.route('/user/<username>')
 def username(username):
     lookup = {'roel':'Roel De Coninck', 'lies':'Liesbeth Vansteenvoort'}
